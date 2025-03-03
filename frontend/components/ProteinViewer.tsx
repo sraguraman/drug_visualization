@@ -35,7 +35,16 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         .then((pdbData) => {
           console.log("PDB file loaded, adding to viewer...");
           newViewer.addModel(pdbData, "pdb");
+
+          // Protein Backbone - Cartoon Representation
           newViewer.setStyle({}, { cartoon: { color: "spectrum" } });
+
+          // Highlight Ligands - Ball-and-Stick Model
+          newViewer.setStyle(
+            { hetflag: true }, // Selects ligands
+            { stick: { colorscheme: "Jmol" } }
+          );
+
           newViewer.zoomTo();
           newViewer.render();
           newViewer.resize();
@@ -43,9 +52,8 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         })
         .catch((err) => console.error("Error fetching PDB file:", err));
 
-      setViewer(newViewer); // Store viewer instance for controls
+      setViewer(newViewer);
 
-      // Ensure viewer resizes properly
       const handleResize = () => {
         newViewer.resize();
       };
