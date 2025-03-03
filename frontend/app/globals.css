@@ -22,3 +22,8 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.app-container {
+  transform: scale(0.75);
+  transform-origin: top center;
+}

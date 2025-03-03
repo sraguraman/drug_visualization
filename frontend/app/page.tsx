@@ -10,11 +10,11 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [pdbUrl, setPdbUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const viewerRef = useRef<any>(null); // ✅ Correctly define the viewer reference
+  const viewerRef = useRef<any>(null);
 
   useEffect(() => {
     if (pdbUrl && viewerRef.current) {
-      viewerRef.current.updateModel(pdbUrl); // ✅ Update model without unmounting
+      viewerRef.current.updateModel(pdbUrl);
     }
   }, [pdbUrl]);
 
@@ -58,6 +58,15 @@ export default function Home() {
       <p className="text-gray-600 text-center mb-6">
         Upload a <strong>.PDB</strong> file to visualize a <strong>3D interactable protein structure with ligands</strong>.
       </p>
+
+      {/* ✅ Example PDB Download Button */}
+      <a
+        href="/7lyj.pdb"
+        download="7lyj.pdb"
+        className="mb-3 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow hover:bg-green-700 transition-all duration-200 cursor-pointer flex items-center"
+        >
+        📥 Download Example PDB File
+      </a>
 
       <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center w-96">
         <label

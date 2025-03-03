@@ -61,6 +61,9 @@ const ProteinViewer = forwardRef((_, ref) => {
           .catch((err) => console.error("❌ Error loading PDB:", err));
 
         prevPdbUrl.current = pdbUrl;
+
+        // ✅ Clear AI analysis when a new file is uploaded
+        setAnalysis(null);
       }
     },
   }));
@@ -122,12 +125,32 @@ const ProteinViewer = forwardRef((_, ref) => {
       </div>
 
       {/* ✅ Controls */}
-      <div className="flex space-x-4 mt-4">
-        <button onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
-        <button onClick={() => viewerInstance?.zoom(1.2) && viewerInstance.render()} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
-        <button onClick={() => viewerInstance?.zoom(0.8) && viewerInstance.render()} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
-        <button onClick={() => viewerInstance?.zoomTo() && viewerInstance.render()} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
-      </div>
+        <div className="flex space-x-4 mt-4">
+        <button
+            onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()}
+            className="p-3 bg-gray-700 text-white rounded-md shadow-md transition-all duration-150 hover:bg-gray-800 active:scale-95 cursor-pointer"
+        >
+            🔄 Rotate
+        </button>
+        <button
+            onClick={() => viewerInstance?.zoom(1.2) && viewerInstance.render()}
+            className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
+        >
+            ➕ Zoom In
+        </button>
+        <button
+            onClick={() => viewerInstance?.zoom(0.8) && viewerInstance.render()}
+            className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
+        >
+            ➖ Zoom Out
+        </button>
+        <button
+            onClick={() => viewerInstance?.zoomTo() && viewerInstance.render()}
+            className="p-3 bg-red-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-red-700 active:scale-95 cursor-pointer"
+        >
+            🔄 Reset
+        </button>
+        </div>
 
       {/* ✅ AI Analysis Button */}
       <button
