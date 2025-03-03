@@ -12,13 +12,15 @@ api_key = openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
-# ✅ Updated CORS settings to allow your frontend
+# ✅ Fix CORS: Explicitly allow frontend domain
+origins = [
+    "http://localhost:3000",  # If testing locally
+    "https://protein-viz.vercel.app"  # ✅ Replace with your frontend's deployed URL
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://protein-viz.vercel.app",  # ✅ Your deployed frontend
-        "http://localhost:3000"  # ✅ Local development
-    ],
+    allow_origins=origins,  # ✅ Allow only your frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,8 +49,6 @@ async def upload_pdb(file: UploadFile = File(...)):
 @app.get("/files/{filename}")
 async def get_pdb_file(filename: str):
     file_path = os.path.join(UPLOAD_DIR, filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, media_type="chemical/x-pdb")
 
 def extract_molecule_info(pdb_text):
