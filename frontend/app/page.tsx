@@ -12,20 +12,22 @@ export default function Home() {
       alert("Please select a file first!");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("file", file);
-
+  
     const res = await fetch("http://127.0.0.1:8000/upload/", {
       method: "POST",
       body: formData,
     });
-
+  
     const data = await res.json();
     if (data.filename) {
-      setPdbUrl(`http://127.0.0.1:8000/files/${data.filename}`);
+      const url = `http://127.0.0.1:8000/files/${data.filename}`;
+      console.log("PDB file available at:", url);
+      setPdbUrl(url);
     }
-  };
+  };  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
