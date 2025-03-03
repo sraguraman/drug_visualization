@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ProteinViewer from "../components/ProteinViewer";
-import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner Icon
-import Image from "next/image"; // ✅ Import Image Component
-import dnaStrand from "../public/dna-strand.png"; // ✅ Replace with your actual image path
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import Image from "next/image";
+import dnaStrand from "../public/dna-strand.png";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [pdbUrl, setPdbUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false); // ✅ Track upload status
+  const [uploading, setUploading] = useState(false);
+  const viewerRef = useRef<any>(null); // ✅ Correctly define the viewer reference
+
+  useEffect(() => {
+    if (pdbUrl && viewerRef.current) {
+      viewerRef.current.updateModel(pdbUrl); // ✅ Update model without unmounting
+    }
+  }, [pdbUrl]);
 
   const handleUpload = async () => {
     if (!file) {
@@ -17,7 +24,7 @@ export default function Home() {
       return;
     }
 
-    setUploading(true); // ✅ Show loading state
+    setUploading(true);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -31,22 +38,20 @@ export default function Home() {
       const data = await res.json();
       if (data.filename) {
         const url = `http://127.0.0.1:8000/files/${data.filename}`;
-        console.log("PDB file available at:", url);
+        console.log("✅ PDB file available at:", url);
         setPdbUrl(url);
       }
     } catch (error) {
-      console.error("Upload failed:", error);
+      console.error("❌ Upload failed:", error);
     } finally {
-      setUploading(false); // ✅ Hide loading spinner
+      setUploading(false);
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-gray-200 p-6">
-      {/* ✅ DNA Image Added */}
       <Image src={dnaStrand} alt="DNA Strand" width={100} height={100} className="mb-4" />
 
-      {/* ✅ Title Styling */}
       <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-6 tracking-tight">
         Protein Visualizer
       </h1>
@@ -54,7 +59,6 @@ export default function Home() {
         Upload a <strong>.PDB</strong> file to visualize a <strong>3D interactable protein structure with ligands</strong>.
       </p>
 
-      {/* ✅ File Upload Box with Improved Styling */}
       <div className="bg-white p-8 rounded-xl shadow-lg flex flex-col items-center w-96">
         <label
           htmlFor="file-upload"
@@ -69,11 +73,9 @@ export default function Home() {
           className="hidden"
           onChange={(e) => {
             setFile(e.target.files?.[0] || null);
-            setPdbUrl(null); // ✅ Clears the old visualization
           }}
         />
 
-        {/* ✅ Upload Button (Clickable + Styled) */}
         <button
           onClick={handleUpload}
           disabled={uploading}
@@ -86,12 +88,10 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ✅ Only Show Viewer If File is Uploaded */}
-      {pdbUrl && (
-        <div className="mt-6 w-full max-w-4xl">
-          <ProteinViewer pdbUrl={pdbUrl} />
-        </div>
-      )}
+      {/* ✅ Viewer stays persistent and does not re-mount */}
+      <div className="mt-6 w-full max-w-4xl">
+        <ProteinViewer ref={viewerRef} />
+      </div>
     </div>
   );
 }

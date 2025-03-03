@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import Script from "next/script";
 import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner for AI loading
 
@@ -10,93 +10,75 @@ declare global {
   }
 }
 
-export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
+// ✅ Keep the viewer instance global so React never resets it
+let viewerInstance: any = null;
+
+const ProteinViewer = forwardRef((_, ref) => {
   const viewerRef = useRef<HTMLDivElement>(null);
-  const analysisRef = useRef<HTMLDivElement>(null); // ✅ Reference for scrolling
+  const analysisRef = useRef<HTMLDivElement>(null);
+  const prevPdbUrl = useRef<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
-  const viewerInstance = useRef<any>(null); // ✅ Keeps the viewer reference across renders
-  const [loading, setLoading] = useState(false); // ✅ AI request state
+  const [loading, setLoading] = useState(false);
 
-  // ✅ UseEffect to clear viewer and reload when pdbUrl updates
-  useEffect(() => {
-    console.log("🚀 useEffect triggered - PDB URL:", pdbUrl);
-  
-    if (!scriptLoaded || !viewerRef.current || !window.$3Dmol || !pdbUrl) return;
-  
-    const viewerContainer = viewerRef.current;
-  
-    // ✅ Force a minimum size before initializing WebGL
-    viewerContainer.style.minHeight = "400px";
-    viewerContainer.style.minWidth = "400px";
-  
-    // ✅ Ensure container has a valid size before initializing WebGL
-    const waitForContainerSize = () => {
-      if (viewerContainer.clientWidth === 0 || viewerContainer.clientHeight === 0) {
-        console.warn("⚠️ Viewer container still has zero size! Retrying in 100ms...");
-        setTimeout(waitForContainerSize, 100);
-        return;
+  // ✅ Allow `page.tsx` to update the viewer without remounting
+  useImperativeHandle(ref, () => ({
+    updateModel: (pdbUrl: string) => {
+      console.log("🚀 Updating model - PDB URL:", pdbUrl);
+      if (!scriptLoaded || !viewerRef.current || !window.$3Dmol) return;
+
+      if (!viewerInstance) {
+        console.log("⚡ Creating viewer for the first time...");
+        viewerInstance = window.$3Dmol.createViewer(viewerRef.current, {
+          width: "100%",
+          height: "100%",
+          backgroundColor: "white",
+        });
       }
-  
-      try {
-        console.log("⚡ Initializing viewer...");
-  
-        if (!viewerInstance.current) {
-          viewerInstance.current = window.$3Dmol.createViewer(viewerContainer, {
-            width: "100%",
-            height: "100%",
-            backgroundColor: "white",
-          });
-        } else {
-          console.log("🧹 Clearing previous viewer...");
-          viewerInstance.current.clear();
-          viewerInstance.current.removeAllModels();
-        }
-  
+
+      if (prevPdbUrl.current !== pdbUrl) {
+        console.log("🔄 Loading new PDB model...");
+        viewerInstance.clear();
+        viewerInstance.removeAllModels();
+
         fetch(pdbUrl)
           .then((res) => res.text())
           .then((pdbData) => {
-            console.log("🔄 PDB data received, loading into viewer...");
-  
-            viewerInstance.current.addModel(pdbData, "pdb");
-            viewerInstance.current.setStyle({}, { cartoon: { color: "spectrum" } });
-            viewerInstance.current.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
-  
-            viewerInstance.current.zoomTo();
-            viewerInstance.current.render();
-            console.log("✅ Model added to viewer");
-  
+            console.log("📄 PDB data received, updating viewer...");
+            viewerInstance.addModel(pdbData, "pdb");
+            viewerInstance.setStyle({}, { cartoon: { color: "spectrum" } });
+            viewerInstance.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
+
+            viewerInstance.zoomTo();
+            viewerInstance.render();
+            console.log("✅ Model added to existing viewer");
+
             setTimeout(() => {
               console.log("🔧 Resizing viewer...");
-              viewerInstance.current.resize();
-              console.log("✅ Viewer resized and should be visible");
+              viewerInstance.resize();
             }, 100);
           })
           .catch((err) => console.error("❌ Error loading PDB:", err));
-      } catch (error) {
-        console.error("❌ Error initializing 3Dmol.js:", error);
+
+        prevPdbUrl.current = pdbUrl;
       }
-    };
-  
-    // ✅ Delay execution until React properly updates the UI
-    setTimeout(waitForContainerSize, 200);
-  
-  }, [pdbUrl, scriptLoaded]); // ✅ Runs when `pdbUrl` updates  
-  
+    },
+  }));
+
   const analyzePDB = async () => {
-    if (!pdbUrl) {
+    if (!prevPdbUrl.current) {
       alert("Please upload a PDB file first.");
       return;
     }
 
-    setLoading(true); // ✅ Show loading state
-    setAnalysis(null); // ✅ Clear previous result
+    setLoading(true);
+    setAnalysis(null);
 
     try {
       const res = await fetch("http://127.0.0.1:8000/analyze_pdb/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdbUrl }),
+        body: JSON.stringify({ pdbUrl: prevPdbUrl.current }),
       });
 
       const data = await res.json();
@@ -107,7 +89,6 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
 
       setAnalysis(cleanText(data.pdb_analysis));
 
-      // ✅ Auto-scroll down to analysis
       setTimeout(() => {
         analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
@@ -119,11 +100,10 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
     }
   };
 
-  // ✅ Cleans AI response text
   const cleanText = (text: string) => {
     return text
-      .replace(/\*\*/g, "") // Removes markdown bolding
-      .replace(/-/g, "•") // Converts hyphens to bullet points
+      .replace(/\*\*/g, "")
+      .replace(/-/g, "•")
       .trim();
   };
 
@@ -136,17 +116,17 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         onError={(e) => console.error("❌ Error loading 3Dmol script:", e)}
       />
 
-      {/* ✅ 3D Viewer */}
+      {/* ✅ Persistent 3D Viewer (Does Not Unmount) */}
       <div className="relative w-full h-[400px] border rounded-lg">
         <div ref={viewerRef} className="w-full h-full" />
       </div>
 
       {/* ✅ Controls */}
       <div className="flex space-x-4 mt-4">
-        <button onClick={() => viewerInstance.current?.rotate(90) && viewerInstance.current.render()} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
-        <button onClick={() => viewerInstance.current?.zoom(1.2) && viewerInstance.current.render()} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
-        <button onClick={() => viewerInstance.current?.zoom(0.8) && viewerInstance.current.render()} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
-        <button onClick={() => viewerInstance.current?.zoomTo() && viewerInstance.current.render()} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
+        <button onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
+        <button onClick={() => viewerInstance?.zoom(1.2) && viewerInstance.render()} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
+        <button onClick={() => viewerInstance?.zoom(0.8) && viewerInstance.render()} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
+        <button onClick={() => viewerInstance?.zoomTo() && viewerInstance.render()} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
       </div>
 
       {/* ✅ AI Analysis Button */}
@@ -173,4 +153,6 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
       )}
     </div>
   );
-}
+});
+
+export default ProteinViewer;
