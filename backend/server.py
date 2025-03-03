@@ -26,9 +26,17 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @app.post("/upload/")
 async def upload_pdb(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_DIR, file.filename)
-    
+
+    # ✅ Debugging: Print file size and type
+    file_size = await file.read()
+    print(f"Received file: {file.filename}, Size: {len(file_size)} bytes, Type: {file.content_type}")
+
+    # ✅ Check if file is empty
+    if len(file_size) == 0:
+        return {"error": "Uploaded file is empty!"}
+
     with open(file_path, "wb") as f:
-        f.write(await file.read())
+        f.write(file_size)
 
     return {"message": f"File {file.filename} uploaded successfully", "filename": file.filename}
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
-import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner icon for loading
+import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner for AI loading
 
 declare global {
   interface Window {
@@ -15,41 +15,74 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
   const analysisRef = useRef<HTMLDivElement>(null); // ✅ Reference for scrolling
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
-  const [viewer, setViewer] = useState<any>(null);
+  const viewerInstance = useRef<any>(null); // ✅ Keeps the viewer reference across renders
   const [loading, setLoading] = useState(false); // ✅ AI request state
 
+  // ✅ UseEffect to clear viewer and reload when pdbUrl updates
   useEffect(() => {
+    console.log("🚀 useEffect triggered - PDB URL:", pdbUrl);
+  
     if (!scriptLoaded || !viewerRef.current || !window.$3Dmol || !pdbUrl) return;
-
-    try {
-      const newViewer = window.$3Dmol.createViewer(viewerRef.current, {
-        width: "100%",
-        height: "100%",
-        backgroundColor: "white",
-      });
-
-      fetch(pdbUrl)
-        .then((res) => res.text())
-        .then((pdbData) => {
-          newViewer.addModel(pdbData, "pdb");
-
-          // ✅ Protein Backbone
-          newViewer.setStyle({}, { cartoon: { color: "spectrum" } });
-
-          // ✅ Highlight Ligands
-          newViewer.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
-
-          newViewer.zoomTo();
-          newViewer.render();
-          newViewer.resize();
-          setViewer(newViewer);
-        })
-        .catch((err) => console.error("Error loading PDB:", err));
-    } catch (error) {
-      console.error("Error initializing 3Dmol.js:", error);
-    }
-  }, [pdbUrl, scriptLoaded]);
-
+  
+    const viewerContainer = viewerRef.current;
+  
+    // ✅ Force a minimum size before initializing WebGL
+    viewerContainer.style.minHeight = "400px";
+    viewerContainer.style.minWidth = "400px";
+  
+    // ✅ Ensure container has a valid size before initializing WebGL
+    const waitForContainerSize = () => {
+      if (viewerContainer.clientWidth === 0 || viewerContainer.clientHeight === 0) {
+        console.warn("⚠️ Viewer container still has zero size! Retrying in 100ms...");
+        setTimeout(waitForContainerSize, 100);
+        return;
+      }
+  
+      try {
+        console.log("⚡ Initializing viewer...");
+  
+        if (!viewerInstance.current) {
+          viewerInstance.current = window.$3Dmol.createViewer(viewerContainer, {
+            width: "100%",
+            height: "100%",
+            backgroundColor: "white",
+          });
+        } else {
+          console.log("🧹 Clearing previous viewer...");
+          viewerInstance.current.clear();
+          viewerInstance.current.removeAllModels();
+        }
+  
+        fetch(pdbUrl)
+          .then((res) => res.text())
+          .then((pdbData) => {
+            console.log("🔄 PDB data received, loading into viewer...");
+  
+            viewerInstance.current.addModel(pdbData, "pdb");
+            viewerInstance.current.setStyle({}, { cartoon: { color: "spectrum" } });
+            viewerInstance.current.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
+  
+            viewerInstance.current.zoomTo();
+            viewerInstance.current.render();
+            console.log("✅ Model added to viewer");
+  
+            setTimeout(() => {
+              console.log("🔧 Resizing viewer...");
+              viewerInstance.current.resize();
+              console.log("✅ Viewer resized and should be visible");
+            }, 100);
+          })
+          .catch((err) => console.error("❌ Error loading PDB:", err));
+      } catch (error) {
+        console.error("❌ Error initializing 3Dmol.js:", error);
+      }
+    };
+  
+    // ✅ Delay execution until React properly updates the UI
+    setTimeout(waitForContainerSize, 200);
+  
+  }, [pdbUrl, scriptLoaded]); // ✅ Runs when `pdbUrl` updates  
+  
   const analyzePDB = async () => {
     if (!pdbUrl) {
       alert("Please upload a PDB file first.");
@@ -79,7 +112,7 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
     } catch (error) {
-      console.error("Error fetching AI analysis:", error);
+      console.error("❌ Error fetching AI analysis:", error);
       setAnalysis("Error retrieving analysis. Please try again.");
     } finally {
       setLoading(false);
@@ -100,7 +133,7 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         src="https://3Dmol.org/build/3Dmol-min.js"
         strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
-        onError={(e) => console.error("Error loading 3Dmol script:", e)}
+        onError={(e) => console.error("❌ Error loading 3Dmol script:", e)}
       />
 
       {/* ✅ 3D Viewer */}
@@ -110,10 +143,10 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
 
       {/* ✅ Controls */}
       <div className="flex space-x-4 mt-4">
-        <button onClick={() => viewer?.rotate(90) && viewer.render()} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
-        <button onClick={() => viewer?.zoom(1.2) && viewer.render()} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
-        <button onClick={() => viewer?.zoom(0.8) && viewer.render()} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
-        <button onClick={() => viewer?.zoomTo() && viewer.render()} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
+        <button onClick={() => viewerInstance.current?.rotate(90) && viewerInstance.current.render()} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
+        <button onClick={() => viewerInstance.current?.zoom(1.2) && viewerInstance.current.render()} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
+        <button onClick={() => viewerInstance.current?.zoom(0.8) && viewerInstance.current.render()} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
+        <button onClick={() => viewerInstance.current?.zoomTo() && viewerInstance.current.render()} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
       </div>
 
       {/* ✅ AI Analysis Button */}
