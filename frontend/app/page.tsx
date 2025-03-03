@@ -33,6 +33,9 @@ export default function Home() {
       const res = await fetch("https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/upload/", {
         method: "POST",
         body: formData,
+        headers: {
+          "Access-Control-Allow-Origin": "*", // ✅ Ensure correct CORS headers
+      },
       });
 
       const data = await res.json();
