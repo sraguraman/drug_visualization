@@ -30,14 +30,14 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/upload/", {
+      const res = await fetch("https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/upload/", {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
       if (data.filename) {
-        const url = `http://127.0.0.1:8000/files/${data.filename}`;
+        const url = `https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/files/${data.filename}`;
         console.log("✅ PDB file available at:", url);
         setPdbUrl(url);
       }
