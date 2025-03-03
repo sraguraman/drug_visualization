@@ -12,6 +12,7 @@ declare global {
 export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
   const viewerRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [viewer, setViewer] = useState<any>(null);
 
   useEffect(() => {
     if (!scriptLoaded) return;
@@ -19,11 +20,10 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
 
     console.log("Initializing 3Dmol.js viewer...");
     try {
-      // Set explicit width & height
       const width = viewerRef.current.clientWidth;
       const height = viewerRef.current.clientHeight;
 
-      const viewer = window.$3Dmol.createViewer(viewerRef.current, {
+      const newViewer = window.$3Dmol.createViewer(viewerRef.current, {
         width: width,
         height: height,
         backgroundColor: "white",
@@ -34,20 +34,21 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         .then((res) => res.text())
         .then((pdbData) => {
           console.log("PDB file loaded, adding to viewer...");
-          viewer.addModel(pdbData, "pdb");
-          viewer.setStyle({}, { cartoon: { color: "spectrum" } });
-          viewer.zoomTo();
-          viewer.render();
-          viewer.resize(); // Ensure it fits in the container
+          newViewer.addModel(pdbData, "pdb");
+          newViewer.setStyle({}, { cartoon: { color: "spectrum" } });
+          newViewer.zoomTo();
+          newViewer.render();
+          newViewer.resize();
           console.log("Rendering complete.");
         })
         .catch((err) => console.error("Error fetching PDB file:", err));
 
+      setViewer(newViewer); // Store viewer instance for controls
+
       // Ensure viewer resizes properly
       const handleResize = () => {
-        viewer.resize();
+        newViewer.resize();
       };
-
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
 
@@ -55,6 +56,38 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
       console.error("Error loading protein structure:", error);
     }
   }, [pdbUrl, scriptLoaded]);
+
+  // 🟢 Rotation Control
+  const rotateModel = () => {
+    if (viewer) {
+      viewer.rotate(90); // Rotate 90 degrees
+      viewer.render();
+    }
+  };
+
+  // 🟢 Zoom In
+  const zoomIn = () => {
+    if (viewer) {
+      viewer.zoom(1.2); // Zoom in by 20%
+      viewer.render();
+    }
+  };
+
+  // 🟢 Zoom Out
+  const zoomOut = () => {
+    if (viewer) {
+      viewer.zoom(0.8); // Zoom out by 20%
+      viewer.render();
+    }
+  };
+
+  // 🟢 Reset View
+  const resetView = () => {
+    if (viewer) {
+      viewer.zoomTo(); // Reset zoom and centering
+      viewer.render();
+    }
+  };
 
   return (
     <div>
@@ -67,13 +100,20 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
         }}
         onError={(e) => console.error("Error loading 3Dmol script:", e)}
       />
-      {/* Ensure Viewer Stays Inside the Box */}
-      <div className="flex justify-center items-center mt-6">
+      {/* Viewer Container */}
+      <div className="flex flex-col items-center mt-6">
         <div
           ref={viewerRef}
           className="w-[600px] h-[500px] border rounded-lg shadow-lg relative"
-          style={{ overflow: "hidden" }} // Prevent overflow issues
+          style={{ overflow: "hidden" }}
         />
+        {/* 🟢 Control Buttons */}
+        <div className="mt-4 flex space-x-4">
+          <button onClick={rotateModel} className="p-2 bg-gray-700 text-white rounded-md">🔄 Rotate</button>
+          <button onClick={zoomIn} className="p-2 bg-blue-600 text-white rounded-md">➕ Zoom In</button>
+          <button onClick={zoomOut} className="p-2 bg-blue-600 text-white rounded-md">➖ Zoom Out</button>
+          <button onClick={resetView} className="p-2 bg-red-600 text-white rounded-md">🔄 Reset</button>
+        </div>
       </div>
     </div>
   );
