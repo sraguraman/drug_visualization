@@ -9,6 +9,8 @@ import aiohttp
 
 load_dotenv()
 api_key = openai.api_key = os.getenv("OPENAI_API_KEY")
+print(f"🔑 OpenAI API Key Loaded: {bool(api_key)}")
+
 
 app = FastAPI()
 
@@ -24,6 +26,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Access-Control-Allow-Origin"],  # ✅ Expose necessary headers
 )
 
 UPLOAD_DIR = "uploads"
