@@ -14,7 +14,7 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    if (!scriptLoaded) return; // Ensure script is loaded
+    if (!scriptLoaded) return;
     if (!viewerRef.current || !window.$3Dmol || !pdbUrl) return;
 
     try {
@@ -36,7 +36,7 @@ export default function ProteinViewer({ pdbUrl }: { pdbUrl: string }) {
       <Script
         src="https://3Dmol.org/build/3Dmol-min.js"
         strategy="beforeInteractive"
-        onLoad={() => setScriptLoaded(true)} // Ensure script is ready
+        onLoad={() => setScriptLoaded(true)}
         onError={(e) => console.error("Error loading 3Dmol script:", e)}
       />
       <div ref={viewerRef} className="w-full h-[500px] border mt-4" />

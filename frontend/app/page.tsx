@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import ProteinViewer from "../components/ProteinViewer";
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [response, setResponse] = useState<string | null>(null);
+  const [pdbUrl, setPdbUrl] = useState<string | null>(null);
 
   const handleUpload = async () => {
     if (!file) {
@@ -15,14 +16,15 @@ export default function Home() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://127.0.0.1:8000/upload", {
+    const res = await fetch("http://127.0.0.1:8000/upload/", {
       method: "POST",
       body: formData,
-      redirect: "follow",
     });
 
     const data = await res.json();
-    setResponse(JSON.stringify(data, null, 2));
+    if (data.filename) {
+      setPdbUrl(`http://127.0.0.1:8000/files/${data.filename}`);
+    }
   };
 
   return (
@@ -52,10 +54,10 @@ export default function Home() {
         </button>
       </div>
 
-      {response && (
-        <pre className="mt-6 p-4 bg-white rounded-lg shadow-lg w-3/4 max-w-2xl text-left">
-          {response}
-        </pre>
+      {pdbUrl && (
+        <div className="mt-6 w-full max-w-4xl">
+          <ProteinViewer pdbUrl={pdbUrl} />
+        </div>
       )}
     </div>
   );
