@@ -25,7 +25,7 @@ origins = [
 async def root():
     return {"message": "API is running"}
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
 
