@@ -11,7 +11,6 @@ load_dotenv()
 api_key = openai.api_key = os.getenv("OPENAI_API_KEY")
 print(f"🔑 OpenAI API Key Loaded: {bool(api_key)}")
 
-
 app = FastAPI()
 
 # ✅ Fix CORS: Explicitly allow frontend domain
@@ -30,10 +29,11 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # ✅ Allow frontend domains
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # ✅ Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # ✅ Allow all headers
+    expose_headers=["Access-Control-Allow-Origin", "Access-Control-Allow-Headers"],  # ✅ Explicitly expose CORS headers
 )
 
 UPLOAD_DIR = "uploads"
