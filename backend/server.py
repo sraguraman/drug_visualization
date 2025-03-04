@@ -16,9 +16,9 @@ app = FastAPI()
 
 # ✅ Fix CORS: Explicitly allow frontend domain
 origins = [
-    "http://localhost:3000",  # If testing locally
-    "https://protein-viz.vercel.app"  # ✅ Replace with your frontend's deployed URL
-    "https://protein-viz.vercel.app/",
+    "http://localhost:3000",  # For local development
+    "https://protein-viz.vercel.app",  # Production frontend
+    "https://protein-viz.vercel.app/",  # With trailing slash
 ]
 
 @app.get("/")
