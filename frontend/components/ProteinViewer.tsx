@@ -78,7 +78,7 @@ const ProteinViewer = forwardRef((_, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch("https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/analyze_pdb/", {
+      const res = await fetch('https://backend-protein-viz.vercel.app/api/analyze_pdb', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbUrl: prevPdbUrl.current }),

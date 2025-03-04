@@ -21,6 +21,14 @@ origins = [
     "https://protein-viz.vercel.app/",
 ]
 
+@app.get("/")
+async def root():
+    return {"message": "API is running"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # ✅ Allow only your frontend

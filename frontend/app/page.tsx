@@ -30,17 +30,14 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/upload/", {
+      const res = await fetch('https://backend-protein-viz.vercel.app/api/upload', {
         method: "POST",
         body: formData,
-        headers: {
-          "Access-Control-Allow-Origin": "*", // ✅ Ensure correct CORS headers
-      },
       });
 
       const data = await res.json();
       if (data.filename) {
-        const url = `https://backend-protein-mhlmzaw65-sid-raguramans-projects.vercel.app/files/${data.filename}`;
+        const url = `https://backend-protein-viz.vercel.app/api/files/${data.filename}`;
         console.log("✅ PDB file available at:", url);
         setPdbUrl(url);
       }
