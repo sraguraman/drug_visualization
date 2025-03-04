@@ -30,14 +30,14 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch('https://backend-protein-viz.vercel.app/upload', {
+      const res = await fetch('https://backend-protein-viz.vercel.app/upload/', {
         method: "POST",
         body: formData,
       });
 
       const data = await res.json();
       if (data.filename) {
-        const url = `https://backend-protein-viz.vercel.app/api/files/${data.filename}`;
+        const url = `https://backend-protein-viz.vercel.app/files/${data.filename}`;
         console.log("✅ PDB file available at:", url);
         setPdbUrl(url);
       }

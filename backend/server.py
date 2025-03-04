@@ -36,6 +36,10 @@ app.add_middleware(
     expose_headers=["Access-Control-Allow-Origin", "Access-Control-Allow-Headers"],  # ✅ Explicitly expose CORS headers
 )
 
+@app.options("/{path:path}")
+async def preflight_request(path: str):
+    return {"message": "Preflight OK"}
+
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
