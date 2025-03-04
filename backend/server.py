@@ -16,9 +16,8 @@ app = FastAPI()
 
 # ✅ Fix CORS: Explicitly allow frontend domain
 origins = [
-    "http://localhost:3000",  # For local development
+    "http://localhost:3000",  # Local development
     "https://protein-viz.vercel.app",  # Production frontend
-    "https://protein-viz.vercel.app/",  # With trailing slash
 ]
 
 @app.get("/")
@@ -31,11 +30,10 @@ async def health_check():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # ✅ Allow only your frontend
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Access-Control-Allow-Origin"],  # ✅ Expose necessary headers
 )
 
 UPLOAD_DIR = "uploads"
