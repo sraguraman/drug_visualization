@@ -18,6 +18,7 @@ app = FastAPI()
 origins = [
     "http://localhost:3000",  # If testing locally
     "https://protein-viz.vercel.app"  # ✅ Replace with your frontend's deployed URL
+    "https://protein-viz.vercel.app/",
 ]
 
 app.add_middleware(
