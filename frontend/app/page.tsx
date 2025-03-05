@@ -18,7 +18,12 @@ export default function Home() {
     }
   }, [pdbUrl]);
 
-  const handleUpload = async () => {
+  const API_BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://your-vercel-backend.vercel.app/api'
+    : 'http://localhost:8000/api';
+
+const handleUpload = async () => {
     if (!file) {
       alert("Please select a file first!");
       return;
@@ -30,7 +35,7 @@ export default function Home() {
     formData.append("file", file);
 
     try {
-      const res = await fetch('https://backend-protein-viz.vercel.app/upload/', {
+      const res = await fetch(`${API_BASE_URL}/upload`, {
         method: "POST",
         body: formData,
       });

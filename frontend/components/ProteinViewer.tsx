@@ -68,7 +68,12 @@ const ProteinViewer = forwardRef((_, ref) => {
     },
   }));
 
-  const analyzePDB = async () => {
+  const API_BASE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://your-vercel-backend.vercel.app/api'
+    : 'http://localhost:8000/api';
+
+const analyzePDB = async () => {
     if (!prevPdbUrl.current) {
       alert("Please upload a PDB file first.");
       return;
@@ -78,7 +83,7 @@ const ProteinViewer = forwardRef((_, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch('https://backend-protein-viz.vercel.app/api/analyze_pdb', {
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbUrl: prevPdbUrl.current }),

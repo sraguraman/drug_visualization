@@ -9,7 +9,8 @@ import aiohttp
 
 load_dotenv()
 api_key = openai.api_key = os.getenv("OPENAI_API_KEY")
-print(f"🔑 OpenAI API Key Loaded: {bool(api_key)}")
+if not api_key:
+    raise Exception("❌ OPENAI_API_KEY is missing. Set it in Vercel environment variables.")
 
 app = FastAPI()
 
