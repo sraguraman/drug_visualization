@@ -6,12 +6,6 @@
             "use": "@vercel/python"
         }
     ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "server.py"
-        }
-    ],
     "headers": [
         {
             "source": "/(.*)",
