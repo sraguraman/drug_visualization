@@ -7,11 +7,6 @@
             "config": { "runtime": "python3.9" }
         }
     ],
-    "functions": {
-        "server.py": {
-            "runtime": "@vercel/python"
-        }
-    },
     "routes": [
         {
             "src": "/(.*)",
@@ -30,4 +25,3 @@
         }
     ]
 }
-
