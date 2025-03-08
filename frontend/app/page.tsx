@@ -20,7 +20,7 @@ export default function Home() {
 
   const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://your-vercel-backend.vercel.app/api'
+    ? 'https://backend-protein-viz.vercel.app/api'
     : 'http://localhost:8000/api';
 
 const handleUpload = async () => {
