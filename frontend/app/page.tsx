@@ -20,7 +20,7 @@ export default function Home() {
 
   const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://backend-protein-viz.vercel.app/api'
+    ? 'https://protein-viz.vercel.app/api'
     : 'http://localhost:8000/api';
 
 const handleUpload = async () => {
@@ -42,7 +42,7 @@ const handleUpload = async () => {
 
       const data = await res.json();
       if (data.filename) {
-        const url = `https://backend-protein-viz.vercel.app/files/${data.filename}`;
+        const url = `https://protein-viz.vercel.app/files/${data.filename}`;
         console.log("✅ PDB file available at:", url);
         setPdbUrl(url);
       }
