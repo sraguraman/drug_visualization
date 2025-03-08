@@ -7,12 +7,6 @@
             "config": { "runtime": "python3.9" }
         }
     ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "server.py"
-        }
-    ],
     "headers": [
         {
             "source": "/(.*)",
