@@ -62,8 +62,38 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
         onLoad={() => setScriptLoaded(true)}
         onError={(e) => console.error("❌ Error loading 3Dmol script:", e)}
       />
+
+      {/* ✅ 3D Viewer */}
       <div className="relative w-full h-[400px] border rounded-lg">
         <div ref={viewerRef} className="w-full h-full" />
+      </div>
+
+      {/* ✅ Restored Controls */}
+      <div className="flex space-x-4 mt-4">
+        <button
+          onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()}
+          className="p-3 bg-gray-700 text-white rounded-md shadow-md transition-all duration-150 hover:bg-gray-800 active:scale-95 cursor-pointer"
+        >
+          🔄 Rotate
+        </button>
+        <button
+          onClick={() => viewerInstance?.zoom(1.2) && viewerInstance.render()}
+          className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
+        >
+          ➕ Zoom In
+        </button>
+        <button
+          onClick={() => viewerInstance?.zoom(0.8) && viewerInstance.render()}
+          className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
+        >
+          ➖ Zoom Out
+        </button>
+        <button
+          onClick={() => viewerInstance?.zoomTo() && viewerInstance.render()}
+          className="p-3 bg-red-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-red-700 active:scale-95 cursor-pointer"
+        >
+          🔄 Reset
+        </button>
       </div>
     </div>
   );
