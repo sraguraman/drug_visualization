@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import Script from "next/script";
+import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner for AI loading
 
 declare global {
   interface Window {
@@ -17,7 +18,10 @@ let viewerInstance: any = null;
 
 const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
   const viewerRef = useRef<HTMLDivElement>(null);
+  const analysisRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useImperativeHandle(ref, () => ({
     updateModel: (newPdbData: string) => {
@@ -54,6 +58,50 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
     }
   }, [pdbData]);
 
+  const API_BASE_URL =
+    process.env.NODE_ENV === "production"
+      ? "https://protein-viz.vercel.app/api"
+      : "http://localhost:8000/api";
+
+  const analyzePDB = async () => {
+    if (!pdbData) {
+      alert("Please upload a PDB file first.");
+      return;
+    }
+
+    setLoading(true);
+    setAnalysis(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pdbData }), // ✅ Send raw PDB data
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(`Failed to analyze PDB file: ${data.detail || "Unknown error"}`);
+      }
+
+      setAnalysis(cleanText(data.pdb_analysis));
+
+      setTimeout(() => {
+        analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    } catch (error) {
+      console.error("❌ Error fetching AI analysis:", error);
+      setAnalysis("Error retrieving analysis. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cleanText = (text: string) => {
+    return text.replace(/\*\*/g, "").replace(/-/g, "•").trim();
+  };
+
   return (
     <div className="flex flex-col items-center w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
       <Script
@@ -68,7 +116,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
         <div ref={viewerRef} className="w-full h-full" />
       </div>
 
-      {/* ✅ Restored Controls */}
+      {/* ✅ Controls Restored */}
       <div className="flex space-x-4 mt-4">
         <button
           onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()}
@@ -95,6 +143,29 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
           🔄 Reset
         </button>
       </div>
+
+      {/* ✅ AI Analysis Button */}
+      <button
+        onClick={analyzePDB}
+        disabled={loading}
+        className={`mt-4 p-3 text-white rounded-md transition-all flex items-center justify-center space-x-2 ${
+          loading ? "bg-green-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700 cursor-pointer"
+        }`}
+      >
+        {loading && <AiOutlineLoading3Quarters className="animate-spin" />}
+        <span>{loading ? "Analyzing..." : "🧬 Analyze PDB Structure"}</span>
+      </button>
+
+      {/* ✅ AI Analysis Output */}
+      {analysis && (
+        <div
+          ref={analysisRef}
+          className="mt-6 p-4 bg-gray-100 rounded-md w-full text-gray-900 shadow-md animate-fade-in"
+        >
+          <h3 className="text-lg font-bold mb-2">AI Analysis</h3>
+          <p className="text-gray-700 whitespace-pre-line">{analysis}</p>
+        </div>
+      )}
     </div>
   );
 });
