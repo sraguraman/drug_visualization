@@ -11,11 +11,6 @@
             "config": { "maxLambdaSize": "50mb" }
         }
     ],
-    "functions": {
-        "api/server.py": {
-            "runtime": "python3.9"
-        }
-    },
     "routes": [
         {
             "src": "/api/(.*)",
