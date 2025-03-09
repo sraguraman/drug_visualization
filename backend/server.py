@@ -12,18 +12,25 @@ if not api_key:
 
 app = FastAPI()
 
+# ✅ Fix CORS: Explicitly allow frontend domain
 origins = [
     "http://localhost:3000",
-    "https://protein-viz.vercel.app"
+    "https://protein-viz.vercel.app",
+    "https://protein-qiy27j6ga-sid-raguramans-projects.vercel.app"  # ✅ Add deployed frontend domain
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=origins,  # ✅ Allow frontend domains
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # ✅ Allow all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # ✅ Allow all headers
+    expose_headers=["Access-Control-Allow-Origin", "Access-Control-Allow-Headers"],  # ✅ Explicitly expose CORS headers
 )
+
+@app.options("/{path:path}")  # ✅ Handle CORS preflight requests
+async def preflight_request(path: str):
+    return {"message": "Preflight OK"}
 
 @app.get("/")
 async def root():
