@@ -77,7 +77,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/analyze_pdb/`, { // ✅ Fix: Ensure correct API path
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, { // ✅ Fix: Ensure correct API path
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbData }),
