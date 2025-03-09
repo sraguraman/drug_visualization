@@ -43,7 +43,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
       viewerInstance.zoomTo();
       viewerInstance.render();
 
-      // ✅ Fix viewer resize on load
+      // ✅ Fix: Resize viewer after adding model
       setTimeout(() => {
         viewerInstance.resize();
       }, 200);
@@ -59,6 +59,11 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
       viewerInstance?.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
       viewerInstance?.zoomTo();
       viewerInstance?.render();
+
+      // ✅ Ensure viewer resizes correctly
+      setTimeout(() => {
+        viewerInstance?.resize();
+      }, 200);
     }
   }, [pdbData]);
 
@@ -77,7 +82,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, { // ✅ Fix: Ensure correct API path
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb/`, { // ✅ Fixed API Path
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbData }),
@@ -120,7 +125,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
         <div ref={viewerRef} className="w-full h-full" />
       </div>
 
-      {/* ✅ Controls Restored */}
+      {/* ✅ Controls */}
       <div className="flex space-x-4 mt-4">
         <button
           onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()}

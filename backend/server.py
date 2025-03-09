@@ -1,11 +1,11 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import openai
 from dotenv import load_dotenv
-import aiohttp
 
 load_dotenv()
+
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise Exception("❌ OPENAI_API_KEY is missing. Set it in Vercel environment variables.")
@@ -29,8 +29,18 @@ app.add_middleware(
 async def root():
     return {"message": "API is running"}
 
-@app.post("/analyze_pdb/")
+@app.post("/api/upload/")
+async def upload_pdb(file: UploadFile = File(...)):
+    """Handles PDB file uploads and returns the file contents as text."""
+    pdb_data = await file.read()
+    if not pdb_data:
+        raise HTTPException(status_code=400, detail="Uploaded file is empty!")
+
+    return {"filename": file.filename, "pdbData": pdb_data.decode("utf-8")}
+
+@app.post("/api/analyze_pdb/")
 async def analyze_pdb(pdb_data: dict):
+    """Processes PDB file with OpenAI for molecular insights."""
     pdb_text = pdb_data.get("pdbData")
     if not pdb_text:
         raise HTTPException(status_code=400, detail="No PDB data provided.")
