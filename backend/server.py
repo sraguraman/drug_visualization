@@ -17,6 +17,7 @@ origins = [
     "http://localhost:3000",
     "https://protein-viz.vercel.app",
     "https://protein-qiy27j6ga-sid-raguramans-projects.vercel.app"  # ✅ Add deployed frontend domain
+    "https://protein-viz.vercel.app/api"
 ]
 
 app.add_middleware(
