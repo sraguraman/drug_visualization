@@ -11,15 +11,15 @@ api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise Exception("❌ OPENAI_API_KEY is missing. Set it in Vercel environment variables.")
 
-# Set your OpenAI API key
+# ✅ Set your OpenAI API key
 openai.api_key = api_key
 
 app = FastAPI()
 
-# CORS Middleware - allow all origins, or list your specific domain(s)
+# ✅ CORS Middleware - allows all domains for simplicity
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or ["https://your-frontend.vercel.app"] for stricter security
+    allow_origins=["*"],  # or specify your domain(s) for stricter security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,16 +40,30 @@ def analyze_pdb(pdb_data: dict):
         raise HTTPException(status_code=400, detail="No PDB data provided.")
 
     try:
-        # Prompt GPT with the first ~500 chars of the PDB
+        # 🔹 Prompt encouraging data-driven analysis without requesting more info
         prompt = f"""
-        You are an expert in molecular docking and drug discovery.
-        Analyze the following PDB file and provide insights:
+        You are an advanced structural biology assistant with deep knowledge of protein structures,
+        ligand binding, and PDB file conventions. Below is a portion of a PDB file:
 
         {pdb_text[:500]}
+
+        Analyze ONLY the data provided above. Do not ask for missing data or disclaimers.
+        Instead, provide your best possible interpretation of:
+
+        1. The protein’s structural features (secondary structure, domains, motifs).
+        2. Any ligands, cofactors, or metal ions you detect from the partial data.
+        3. Possible functional insights or binding interactions you can infer.
+        4. Any significant or unique aspects you notice in this PDB excerpt.
+
+        Speak as an expert structural biochemist, focusing on the data at hand.
+        If certain details appear incomplete, simply note that the data is limited,
+        but do not ask for more information. Provide a concise, data-driven analysis.
         """
 
+        # ✅ Updated usage for openai>=0.27.0
+        # Use model="gpt-4" if you have GPT-4 access; otherwise "gpt-3.5-turbo"
         response = openai.ChatCompletion.create(
-            model="gpt-4-turbo",  # or "gpt-3.5-turbo"
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a structural biochemist."},
                 {"role": "user", "content": prompt},
