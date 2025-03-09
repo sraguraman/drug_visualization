@@ -42,7 +42,11 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
       viewerInstance.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
       viewerInstance.zoomTo();
       viewerInstance.render();
-      viewerInstance.resize();
+
+      // ✅ Fix viewer resize on load
+      setTimeout(() => {
+        viewerInstance.resize();
+      }, 200);
     },
   }));
 
@@ -73,10 +77,10 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, {
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb/`, { // ✅ Fix: Ensure correct API path
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdbData }), // ✅ Send raw PDB data
+        body: JSON.stringify({ pdbData }),
       });
 
       const data = await res.json();
