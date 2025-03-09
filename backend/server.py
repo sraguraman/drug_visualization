@@ -1,76 +1,62 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import openai
 from dotenv import load_dotenv
 
-# ✅ Load environment variables safely
+# Load environment variables (including OPENAI_API_KEY)
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise Exception("❌ OPENAI_API_KEY is missing. Set it in Vercel environment variables.")
 
+# Set your OpenAI API key
+openai.api_key = api_key
+
 app = FastAPI()
 
-# ✅ Explicitly allow frontend origins
-origins = [
-    "http://localhost:3000",
-    "https://protein-viz.vercel.app",
-    "https://protein-qiy27j6ga-sid-raguramans-projects.vercel.app"
-]
-
+# CORS Middleware - allow all origins, or list your specific domain(s)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # or ["https://your-frontend.vercel.app"] for stricter security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.options("/{path:path}")  # ✅ Handle CORS preflight requests
-async def preflight_request(path: str):
-    return {"message": "Preflight OK"}
-
 @app.get("/")
-async def root():
+def root():
     return {"message": "API is running"}
 
-@app.post("/api/upload/")
-async def upload_pdb(file: UploadFile = File(...)):
-    """Handles PDB file uploads and returns the file contents as text."""
-    pdb_data = await file.read()
-    if not pdb_data:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty!")
-
-    return {"filename": file.filename, "pdbData": pdb_data.decode("utf-8")}
-
-@app.post("/api/analyze_pdb/")
-async def analyze_pdb(pdb_data: dict):
-    """Processes PDB file with OpenAI for molecular insights."""
+@app.post("/api/analyze_pdb")
+def analyze_pdb(pdb_data: dict):
+    """
+    Processes in-memory PDB data with GPT for insights.
+    Expects JSON: { "pdbData": "...pdb file contents..." }
+    """
     pdb_text = pdb_data.get("pdbData")
     if not pdb_text:
         raise HTTPException(status_code=400, detail="No PDB data provided.")
 
     try:
+        # Prompt GPT with the first ~500 chars of the PDB
         prompt = f"""
         You are an expert in molecular docking and drug discovery.
         Analyze the following PDB file and provide insights:
 
-        {pdb_text[:500]}  # Limit input for GPT
+        {pdb_text[:500]}
         """
 
-        client = openai.OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4-turbo",
+        response = openai.ChatCompletion.create(
+            model="gpt-4-turbo",  # or "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": "You are a structural biochemist."},
                 {"role": "user", "content": prompt},
             ],
         )
-
         gpt_response = response.choices[0].message.content
         return {"pdb_analysis": gpt_response}
 
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))

@@ -12,7 +12,8 @@ export default function Home() {
 
   useEffect(() => {
     if (pdbData && viewerRef.current) {
-      console.log("Updating model:", pdbData);
+      console.log("Loaded PDB data:", pdbData.slice(0, 60), "...");
+      // If you want to call a method on ProteinViewer, do so here
     }
   }, [pdbData]);
 
@@ -42,6 +43,7 @@ export default function Home() {
         Upload a <strong>.PDB</strong> file to visualize a <strong>3D interactable protein structure with ligands</strong>.
       </p>
 
+      {/* Example PDB Download Button */}
       <a
         href="/7lyj.pdb"
         download="7lyj.pdb"
@@ -66,6 +68,7 @@ export default function Home() {
         />
       </div>
 
+      {/* The 3D Viewer + AI Analysis */}
       <div className="mt-6 w-full max-w-4xl">
         <ProteinViewer ref={viewerRef} pdbData={pdbData} />
       </div>

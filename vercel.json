@@ -1,35 +1,35 @@
 {
     "version": 2,
     "builds": [
-        {
-            "src": "frontend/package.json",
-            "use": "@vercel/next"
-        },
-        {
-            "src": "backend/server.py",
-            "use": "@vercel/python",
-            "config": { "maxLambdaSize": "50mb" }
-        }
+      {
+        "src": "frontend/package.json",
+        "use": "@vercel/next"
+      },
+      {
+        "src": "backend/server.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "50mb" }
+      }
     ],
     "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "backend/server.py"
-        },
-        {
-            "source": "/(.*)",
-            "destination": "frontend/$1"
-        }
+      {
+        "source": "/api/(.*)",
+        "destination": "backend/server.py"
+      },
+      {
+        "source": "/(.*)",
+        "destination": "frontend/$1"
+      }
     ],
     "headers": [
-        {
-            "source": "/(.*)",
-            "headers": [
-                { "key": "Access-Control-Allow-Origin", "value": "*" },
-                { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, PUT, DELETE" },
-                { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
-                { "key": "Access-Control-Allow-Credentials", "value": "true" }
-            ]
-        }
+      {
+        "source": "/(.*)",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, PUT, DELETE" },
+          { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" },
+          { "key": "Access-Control-Allow-Credentials", "value": "true" }
+        ]
+      }
     ]
 }

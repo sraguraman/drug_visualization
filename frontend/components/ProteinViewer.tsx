@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import Script from "next/script";
-import { AiOutlineLoading3Quarters } from "react-icons/ai"; // ✅ Spinner for AI loading
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 declare global {
   interface Window {
@@ -15,26 +15,35 @@ type ProteinViewerProps = {
 };
 
 const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData }, ref) => {
-  const viewerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const viewerInstanceRef = useRef<any>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useImperativeHandle(ref, () => viewerRef.current as HTMLDivElement, []);
+  // Expose container DOM element to parent if needed
+  useImperativeHandle(ref, () => containerRef.current as HTMLDivElement, []);
 
   useEffect(() => {
-    if (!scriptLoaded || !window.$3Dmol || !viewerRef.current) return;
+    if (!scriptLoaded || !window.$3Dmol || !containerRef.current) return;
 
-    const viewer = window.$3Dmol.createViewer(viewerRef.current, {
-      width: "100%",
-      height: "100%",
-      backgroundColor: "white",
-    });
+    // Create the viewer once
+    if (!viewerInstanceRef.current) {
+      viewerInstanceRef.current = window.$3Dmol.createViewer(containerRef.current, {
+        width: "100%",
+        height: "100%",
+        backgroundColor: "white",
+      });
+    }
+
+    const viewer = viewerInstanceRef.current;
+
+    // Clear old model & load new PDB data
+    viewer.clear();
+    viewer.removeAllModels();
 
     if (pdbData) {
-      viewer.clear();
-      viewer.removeAllModels();
       viewer.addModel(pdbData, "pdb");
       viewer.setStyle({}, { cartoon: { color: "spectrum" } });
       viewer.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
@@ -42,14 +51,17 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
       viewer.render();
     }
 
+    // Resize after a short delay
     setTimeout(() => viewer.resize(), 200);
-  }, [pdbData, scriptLoaded]);
+  }, [scriptLoaded, pdbData]);
 
+  // Point to your FastAPI backend
   const API_BASE_URL =
     process.env.NODE_ENV === "production"
       ? "https://protein-viz.vercel.app/api"
       : "http://localhost:8000/api";
 
+  // Analyze PDB with GPT
   const analyzePDB = async () => {
     if (!pdbData) {
       alert("Please upload a PDB file first.");
@@ -67,13 +79,11 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         throw new Error(`Failed to analyze PDB file: ${data.detail || "Unknown error"}`);
       }
 
       setAnalysis(cleanText(data.pdb_analysis));
-
       setTimeout(() => {
         analysisRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
@@ -85,8 +95,38 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
     }
   };
 
+  // Clean GPT output text
   const cleanText = (text: string) => {
     return text.replace(/\*\*/g, "").replace(/-/g, "•").trim();
+  };
+
+  // Basic viewer controls
+  const handleRotate = () => {
+    const viewer = viewerInstanceRef.current;
+    if (!viewer) return;
+    viewer.rotate(90);
+    viewer.render();
+  };
+
+  const handleZoomIn = () => {
+    const viewer = viewerInstanceRef.current;
+    if (!viewer) return;
+    viewer.zoom(1.2);
+    viewer.render();
+  };
+
+  const handleZoomOut = () => {
+    const viewer = viewerInstanceRef.current;
+    if (!viewer) return;
+    viewer.zoom(0.8);
+    viewer.render();
+  };
+
+  const handleReset = () => {
+    const viewer = viewerInstanceRef.current;
+    if (!viewer) return;
+    viewer.zoomTo();
+    viewer.render();
   };
 
   return (
@@ -98,40 +138,40 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
         onError={(e) => console.error("❌ Error loading 3Dmol script:", e)}
       />
 
-      {/* ✅ 3D Viewer */}
+      {/* 3D Viewer Container */}
       <div className="relative w-full h-[400px] border rounded-lg">
-        <div ref={viewerRef} className="w-full h-full" />
+        <div ref={containerRef} className="w-full h-full" />
       </div>
 
-      {/* ✅ Controls Restored */}
+      {/* Viewer Controls */}
       <div className="flex space-x-4 mt-4">
         <button
-          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').rotate(90)}
+          onClick={handleRotate}
           className="p-3 bg-gray-700 text-white rounded-md shadow-md transition-all duration-150 hover:bg-gray-800 active:scale-95 cursor-pointer"
         >
           🔄 Rotate
         </button>
         <button
-          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoom(1.2)}
+          onClick={handleZoomIn}
           className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
         >
           ➕ Zoom In
         </button>
         <button
-          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoom(0.8)}
+          onClick={handleZoomOut}
           className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
         >
           ➖ Zoom Out
         </button>
         <button
-          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoomTo()}
+          onClick={handleReset}
           className="p-3 bg-red-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-red-700 active:scale-95 cursor-pointer"
         >
           🔄 Reset
         </button>
       </div>
 
-      {/* ✅ AI Analysis Button */}
+      {/* AI Analysis Button */}
       <button
         onClick={analyzePDB}
         disabled={loading}
@@ -143,7 +183,7 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
         <span>{loading ? "Analyzing..." : "🧬 Analyze PDB Structure"}</span>
       </button>
 
-      {/* ✅ AI Analysis Output */}
+      {/* AI Analysis Output */}
       {analysis && (
         <div
           ref={analysisRef}
