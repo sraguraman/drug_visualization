@@ -60,10 +60,8 @@ def analyze_pdb(pdb_data: dict):
         but do not ask for more information. Provide a concise, data-driven analysis.
         """
 
-        # ✅ Updated usage for openai>=0.27.0
-        # Use model="gpt-4" if you have GPT-4 access; otherwise "gpt-3.5-turbo"
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a structural biochemist."},
                 {"role": "user", "content": prompt},
