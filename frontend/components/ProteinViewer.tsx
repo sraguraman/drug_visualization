@@ -14,58 +14,36 @@ type ProteinViewerProps = {
   pdbData?: string | null;
 };
 
-let viewerInstance: any = null;
-
-const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
+const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData }, ref) => {
   const viewerRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useImperativeHandle(ref, () => ({
-    updateModel: (newPdbData: string) => {
-      if (!scriptLoaded || !viewerRef.current || !window.$3Dmol) return;
-
-      if (!viewerInstance) {
-        viewerInstance = window.$3Dmol.createViewer(viewerRef.current, {
-          width: "100%",
-          height: "100%",
-          backgroundColor: "white",
-        });
-      }
-
-      viewerInstance.clear();
-      viewerInstance.removeAllModels();
-      viewerInstance.addModel(newPdbData, "pdb");
-      viewerInstance.setStyle({}, { cartoon: { color: "spectrum" } });
-      viewerInstance.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
-      viewerInstance.zoomTo();
-      viewerInstance.render();
-
-      // ✅ Fix: Resize viewer after adding model
-      setTimeout(() => {
-        viewerInstance.resize();
-      }, 200);
-    },
-  }));
+  useImperativeHandle(ref, () => viewerRef.current as HTMLDivElement, []);
 
   useEffect(() => {
-    if (pdbData) {
-      viewerInstance?.clear();
-      viewerInstance?.removeAllModels();
-      viewerInstance?.addModel(pdbData, "pdb");
-      viewerInstance?.setStyle({}, { cartoon: { color: "spectrum" } });
-      viewerInstance?.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
-      viewerInstance?.zoomTo();
-      viewerInstance?.render();
+    if (!scriptLoaded || !window.$3Dmol || !viewerRef.current) return;
 
-      // ✅ Ensure viewer resizes correctly
-      setTimeout(() => {
-        viewerInstance?.resize();
-      }, 200);
+    const viewer = window.$3Dmol.createViewer(viewerRef.current, {
+      width: "100%",
+      height: "100%",
+      backgroundColor: "white",
+    });
+
+    if (pdbData) {
+      viewer.clear();
+      viewer.removeAllModels();
+      viewer.addModel(pdbData, "pdb");
+      viewer.setStyle({}, { cartoon: { color: "spectrum" } });
+      viewer.setStyle({ hetflag: true }, { stick: { colorscheme: "Jmol" } });
+      viewer.zoomTo();
+      viewer.render();
     }
-  }, [pdbData]);
+
+    setTimeout(() => viewer.resize(), 200);
+  }, [pdbData, scriptLoaded]);
 
   const API_BASE_URL =
     process.env.NODE_ENV === "production"
@@ -82,7 +60,7 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
     setAnalysis(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/analyze_pdb/`, { // ✅ Fixed API Path
+      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbData }),
@@ -125,28 +103,28 @@ const ProteinViewer = forwardRef(({ pdbData }: ProteinViewerProps, ref) => {
         <div ref={viewerRef} className="w-full h-full" />
       </div>
 
-      {/* ✅ Controls */}
+      {/* ✅ Controls Restored */}
       <div className="flex space-x-4 mt-4">
         <button
-          onClick={() => viewerInstance?.rotate(90) && viewerInstance.render()}
+          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').rotate(90)}
           className="p-3 bg-gray-700 text-white rounded-md shadow-md transition-all duration-150 hover:bg-gray-800 active:scale-95 cursor-pointer"
         >
           🔄 Rotate
         </button>
         <button
-          onClick={() => viewerInstance?.zoom(1.2) && viewerInstance.render()}
+          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoom(1.2)}
           className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
         >
           ➕ Zoom In
         </button>
         <button
-          onClick={() => viewerInstance?.zoom(0.8) && viewerInstance.render()}
+          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoom(0.8)}
           className="p-3 bg-blue-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-blue-700 active:scale-95 cursor-pointer"
         >
           ➖ Zoom Out
         </button>
         <button
-          onClick={() => viewerInstance?.zoomTo() && viewerInstance.render()}
+          onClick={() => viewerRef.current && window.$3Dmol && window.$3Dmol.get('viewer').zoomTo()}
           className="p-3 bg-red-600 text-white rounded-md shadow-md transition-all duration-150 hover:bg-red-700 active:scale-95 cursor-pointer"
         >
           🔄 Reset

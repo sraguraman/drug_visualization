@@ -4,6 +4,7 @@ import os
 import openai
 from dotenv import load_dotenv
 
+# ✅ Load environment variables safely
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -12,21 +13,19 @@ if not api_key:
 
 app = FastAPI()
 
-# ✅ Fix CORS: Explicitly allow frontend domain
+# ✅ Explicitly allow frontend origins
 origins = [
     "http://localhost:3000",
     "https://protein-viz.vercel.app",
-    "https://protein-qiy27j6ga-sid-raguramans-projects.vercel.app"  # ✅ Add deployed frontend domain
-    "https://protein-viz.vercel.app/api"
+    "https://protein-qiy27j6ga-sid-raguramans-projects.vercel.app"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # ✅ Allow frontend domains
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # ✅ Allow all methods (GET, POST, OPTIONS, etc.)
-    allow_headers=["*"],  # ✅ Allow all headers
-    expose_headers=["Access-Control-Allow-Origin", "Access-Control-Allow-Headers"],  # ✅ Explicitly expose CORS headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.options("/{path:path}")  # ✅ Handle CORS preflight requests

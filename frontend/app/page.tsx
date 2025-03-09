@@ -8,11 +8,11 @@ import dnaStrand from "../public/dna-strand.png";
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [pdbData, setPdbData] = useState<string | null>(null);
-  const viewerRef = useRef<any>(null);
+  const viewerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (pdbData && viewerRef.current) {
-      viewerRef.current.updateModel(pdbData);
+      console.log("Updating model:", pdbData);
     }
   }, [pdbData]);
 
