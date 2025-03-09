@@ -72,7 +72,7 @@ const ProteinViewer = forwardRef<HTMLDivElement, ProteinViewerProps>(({ pdbData 
     setAnalysis(null);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/analyze_pdb`, {
+        const res = await fetch("/api/analyze_pdb", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pdbData }),
